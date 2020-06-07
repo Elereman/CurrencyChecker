@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:DollarCheck/dollar.dart';
+import 'package:DollarCheck/domain/dollar.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
