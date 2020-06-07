@@ -1,13 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:DollarCheck/dollarDB.dart';
-import 'package:DollarCheck/domain/dollar.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-import 'domain/dollar.dart';
+import 'domain/currency/model/exchange_rate.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -17,9 +14,9 @@ class Home extends StatefulWidget {
 }
 
 class HomeState extends State<Home> {
-  List<Dollar> data = <Dollar>[];
+  List<ExchangeRate> data = <ExchangeRate>[];
   Timer _timer;
-  DollarDB _dollarDB;
+
   final String _title = 'DollarCheck';
 
   @override
@@ -30,7 +27,7 @@ class HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    _dollarDB = DollarDB();
+    // _dollarDB = DollarDB();
     //data.addAll(await loadList());
     loadList().then((dollars) => print(dollars));
     startTimer();
@@ -39,8 +36,8 @@ class HomeState extends State<Home> {
         title: Text(_title),
       ),
       body: ListView(
-          children: buildList(),
-        ),
+        children: buildList(),
+      ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.update),
         onPressed: () => update(),
@@ -59,7 +56,8 @@ class HomeState extends State<Home> {
   void update() async {
     showToast('Обновление');
     String response = '';
-    const String url = 'https://minfin.com.ua/currency/auction/usd/buy/kharkov/';
+    const String url =
+        'https://minfin.com.ua/currency/auction/usd/buy/kharkov/';
     final HttpClient client = HttpClient();
     final HttpClientRequest request = await client.getUrl(Uri.parse(url));
     final HttpClientResponse requestResponse = await request.close();
@@ -84,18 +82,17 @@ class HomeState extends State<Home> {
         fontSize: 16.0);
   }
 
-  Future<List<Dollar>> loadList() async {
-    _dollarDB.createDB();
-    return await _dollarDB.dollars();
+  Future<List<ExchangeRate>> loadList() async {
+    // return await _dollarDB.dollars();
   }
 
-  void saveList(List<Dollar> dollars) {
-    _dollarDB.createDB();
-    _dollarDB.insertDollars(dollars);
+  void saveList(List<ExchangeRate> dollars) {
+//    _dollarDB.createDB();
+//    _dollarDB.insertDollars(dollars);
   }
 
-  void addToList(Dollar dollar) {
-    Dollar added;
+  void addToList(ExchangeRate dollar) {
+    ExchangeRate added;
     if (data.isNotEmpty) {
       data.forEach((d) {
         if (dollar.buy != d.buy) {
@@ -113,18 +110,18 @@ class HomeState extends State<Home> {
     }
   }
 
-  Dollar parseHtml(String html) {
-    Dollar result;
+  ExchangeRate parseHtml(String html) {
+    ExchangeRate result;
     final List<String> strings = <String>[];
     final RegExp exp = RegExp('грн');
     final Iterable<Match> matches = exp.allMatches(html);
     matches.forEach(
         (Match key) => strings.add(html.substring(key.start - 6, key.end - 4)));
-    result = Dollar(
-        id: data.length,
-        buy: convertToDouble(strings[0]),
-        sell: convertToDouble(strings[1]),
-        date: DateTime.now());
+//    result = ExchangeRate(
+//        id: data.length,
+//        buy: convertToDouble(strings[0]),
+//        sell: convertToDouble(strings[1]),
+//        timestamp: DateTime.now());
     return result;
   }
 
@@ -135,17 +132,17 @@ class HomeState extends State<Home> {
 
   List<Widget> buildList() {
     return data
-        .map((Dollar d) => ListTile(
-              title: Text(d.date.year.toString() +
+        .map((ExchangeRate d) => ListTile(
+              title: Text(d.timestamp.year.toString() +
                   '.' +
-                  d.date.month.toString() +
+                  d.timestamp.month.toString() +
                   '.' +
-                  d.date.day.toString()),
-              subtitle: Text(d.date.hour.toString() +
+                  d.timestamp.day.toString()),
+              subtitle: Text(d.timestamp.hour.toString() +
                   ':' +
-                  d.date.minute.toString() +
+                  d.timestamp.minute.toString() +
                   ':' +
-                  d.date.second.toString()),
+                  d.timestamp.second.toString()),
               leading: CircleAvatar(
                   child: Text(
                       (d.id == 0
