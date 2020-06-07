@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:DollarCheck/domain/dollar.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -15,7 +16,7 @@ void createDB() async {
   onCreate: (db, version) {
     // Run the CREATE TABLE statement on the database.
     return db.execute(
-      "CREATE TABLE dollars(id INTEGER PRIMARY KEY, buy DOUBLE, sell DOUBLE, date TEXT)",
+      'CREATE TABLE dollars(id INTEGER PRIMARY KEY, buy DOUBLE, sell DOUBLE, date TEXT)',
     );
   },
   // Set the version. This executes the onCreate function and provides a
@@ -41,16 +42,16 @@ Future<void> insertDollar(Dollar dollar) async {
 
 Future<void> updateDollar(Dollar dollar) async {
   // Get a reference to the database.
-  final db = await database;
+  final Database db = await database;
 
   // Update the given Dog.
   await db.update(
     'dollars',
     dollar.toMap(),
     // Ensure that the Dog has a matching id.
-    where: "id = ?",
+    where: 'id = ?',
     // Pass the Dog's id as a whereArg to prevent SQL injection.
-    whereArgs: [dollar.id],
+    whereArgs: [dollar.id]
   );
 }
 
@@ -62,12 +63,12 @@ Future<List<Dollar>> dollars() async {
   final List<Map<String, dynamic>> maps = await db.query('dollars');
 
   // Convert the List<Map<String, dynamic> into a List<Dog>.
-  return List.generate(maps.length, (i) {
+  return List<Dollar>.generate(maps.length, (i) {
     return Dollar(
-      id: maps[i]['id'],
-      buy: maps[i]['buy'],
-      sell: maps[i]['sell'],
-      date: dateTimeFomString(maps[i]['date']),
+      id: maps[i]['id'] as int,
+      buy: maps[i]['buy'] as double,
+      sell: maps[i]['sell'] as double,
+      date: dateTimeFomString(maps[i]['date'] as String),
     );
   });
 }

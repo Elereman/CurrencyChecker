@@ -7,6 +7,8 @@ import 'package:DollarCheck/domain/dollar.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+import 'domain/dollar.dart';
+
 class Home extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -15,9 +17,10 @@ class Home extends StatefulWidget {
 }
 
 class HomeState extends State<Home> {
-  List<Dollar> data = List<Dollar>();
+  List<Dollar> data = <Dollar>[];
   Timer _timer;
-  DollarDB dollarDB;
+  DollarDB _dollarDB;
+  final String _title = 'DollarCheck';
 
   @override
   void dispose() {
@@ -27,19 +30,17 @@ class HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    dollarDB = DollarDB();
+    _dollarDB = DollarDB();
     //data.addAll(await loadList());
     loadList().then((dollars) => print(dollars));
     startTimer();
     return Scaffold(
       appBar: AppBar(
-        title: Text('DollarCheck'),
+        title: Text(_title),
       ),
-      body: Container(
-        child: ListView(
+      body: ListView(
           children: buildList(),
         ),
-      ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.update),
         onPressed: () => update(),
@@ -48,26 +49,26 @@ class HomeState extends State<Home> {
   }
 
   void startTimer() {
-    const time = const Duration(minutes: 15);
+    final Duration time = Duration(minutes: 15);
     if (_timer == null) {
       update();
-      _timer = new Timer.periodic(time, (Timer timer) => update());
+      _timer = Timer.periodic(time, (Timer timer) => update());
     }
   }
 
   void update() async {
-    showToast("Обновление");
-    String responce = "";
-    String url = 'https://minfin.com.ua/currency/auction/usd/buy/kharkov/';
-    HttpClient client = HttpClient();
-    var request = await client.getUrl(Uri.parse(url));
-    var response = await request.close();
-    await for (var contents in response.transform(Utf8Decoder())) {
-      responce = responce + contents;
+    showToast('Обновление');
+    String response = '';
+    const String url = 'https://minfin.com.ua/currency/auction/usd/buy/kharkov/';
+    final HttpClient client = HttpClient();
+    final HttpClientRequest request = await client.getUrl(Uri.parse(url));
+    final HttpClientResponse requestResponse = await request.close();
+    await for (String contents in requestResponse.transform(Utf8Decoder())) {
+      response = response + contents;
     }
     buildList();
     setState(() {
-      addToList(parseHtml(responce));
+      addToList(parseHtml(response));
     });
     saveList(data);
   }
@@ -84,18 +85,18 @@ class HomeState extends State<Home> {
   }
 
   Future<List<Dollar>> loadList() async {
-    dollarDB.createDB();
-    return await dollarDB.dollars();
+    _dollarDB.createDB();
+    return await _dollarDB.dollars();
   }
 
   void saveList(List<Dollar> dollars) {
-    dollarDB.createDB();
-    dollarDB.insertDollars(dollars);
+    _dollarDB.createDB();
+    _dollarDB.insertDollars(dollars);
   }
 
   void addToList(Dollar dollar) {
     Dollar added;
-    if (data.length > 0) {
+    if (data.isNotEmpty) {
       data.forEach((d) {
         if (dollar.buy != d.buy) {
           added = d;
@@ -113,21 +114,21 @@ class HomeState extends State<Home> {
   }
 
   Dollar parseHtml(String html) {
-    Dollar reslult = Dollar();
-    List<String> strings = List<String>();
-    RegExp exp = RegExp('грн');
-    Iterable<Match> matches = exp.allMatches(html);
+    Dollar result;
+    final List<String> strings = <String>[];
+    final RegExp exp = RegExp('грн');
+    final Iterable<Match> matches = exp.allMatches(html);
     matches.forEach(
-        (key) => strings.add(html.substring(key.start - 6, key.end - 4)));
-    reslult = Dollar(
+        (Match key) => strings.add(html.substring(key.start - 6, key.end - 4)));
+    result = Dollar(
         id: data.length,
-        buy: converToDouble(strings[0]),
-        sell: converToDouble(strings[1]),
+        buy: convertToDouble(strings[0]),
+        sell: convertToDouble(strings[1]),
         date: DateTime.now());
-    return reslult;
+    return result;
   }
 
-  double converToDouble(String string) {
+  double convertToDouble(String string) {
     string = string.replaceAll(',', '.');
     return double.parse(string);
   }
@@ -162,9 +163,9 @@ class HomeState extends State<Home> {
                       style: TextStyle(fontWeight: FontWeight.w900))),
               trailing: Column(
                 children: <Widget>[
-                  Text("Покупка: " + d.buy.toString()),
+                  Text('Покупка: ' + d.buy.toString()),
                   Text(''),
-                  Text("Продажа: " + d.sell.toString())
+                  Text('Продажа: ' + d.sell.toString())
                 ],
               ),
             ))
