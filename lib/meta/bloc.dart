@@ -8,6 +8,10 @@ abstract class Bloc<S, E extends BlocEvent<S>> implements Disposable {
   final BehaviorSubject<S> _stateSubject = BehaviorSubject<S>();
   final StreamController<E> _eventStreamController = StreamController<E>();
 
+  Stream<S> get stateStream => _stateSubject.stream;
+
+  Sink<E> get eventSink => _eventStreamController.sink;
+
   Bloc() {
     _eventStreamController.stream.listen((E event) {
       _stateSubject.value = event.reduce(_stateSubject.value);
